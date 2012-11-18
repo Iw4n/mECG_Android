@@ -1,4 +1,4 @@
-package com.example.XML;
+package ahd.basics.xml;
 
 public class SOAPhard {
 

@@ -1,4 +1,4 @@
-package com.example.HL7;
+package ahd.basics.hl7;
 
 import java.util.ArrayList;
 

@@ -1,4 +1,4 @@
-package com.example.XML;
+package ahd.basics.xml;
 
 import java.io.IOException;
 

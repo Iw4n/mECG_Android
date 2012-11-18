@@ -1,4 +1,4 @@
-package com.example.cardiograph;
+package ahd.exec;
 
 
 import java.io.BufferedReader;
@@ -16,9 +16,11 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import com.example.HL7.*;
-import com.example.XML.*;
+import com.example.cardiograph.R;
 
+
+import ahd.basics.hl7.*;
+import ahd.basics.xml.*;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
