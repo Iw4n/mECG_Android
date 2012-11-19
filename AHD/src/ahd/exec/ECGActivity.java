@@ -62,6 +62,7 @@ public class ECGActivity extends Activity {
     private int count;
     private Handler h = new Handler();
 
+    //Variables for Blood Pressure
     private int sys;
     private int dia;
     private int map;
@@ -73,10 +74,12 @@ public class ECGActivity extends Activity {
     private String obs_dat = "";
     
     
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //initialize the UI
         start = (Button)findViewById(R.id.bp_start);
         reg = (Button)findViewById(R.id.bp_reg);
         val_syst = (TextView)findViewById(R.id.bp_val_syst);
@@ -93,16 +96,27 @@ public class ECGActivity extends Activity {
         val_time.setText("Datum: ---");
         info.setText("---");
         
-
+        
+        //BluetoothAdapter is the entry point for the bluetooth interaction 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         
+        //get the profile ==> here HDP / HEALTH
         mBluetoothAdapter.getProfileProxy(this, mBluetoothServiceListener,BluetoothProfile.HEALTH);
         info.setText("gotProfileProxy");
         
         //register
+        //sink is the smart device that receives the medical data
+        //0x1007 blood pressure meter
+        //change 0x1007 to the ECG ID
+        //if true callback will be called
+        
         mBluetoothHealth.registerSinkAppConfiguration(TAG, 0x1007, mHealthCallback);
         
         //connect -> select device
+        /**
+         * Dialog to display a list of bonded Bluetooth devices for user to select from.  This is
+         * needed only for channel connection initiated from the application.
+         */
         start.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mAllBondedDevices =
@@ -419,6 +433,7 @@ public class ECGActivity extends Activity {
         @Override
         public void run() {
             FileOutputStream fos = new FileOutputStream(mFd.getFileDescriptor());
+            //blood pressure association response
             final byte data_AR[] = new byte[] {         (byte) 0xE3, (byte) 0x00,
                                                         (byte) 0x00, (byte) 0x2C, 
                                                         (byte) 0x00, (byte) 0x00,
@@ -436,7 +451,8 @@ public class ECGActivity extends Activity {
                                                         (byte) 0x00, (byte) 0x00,
                                                         (byte) 0x00, (byte) 0x00, 
                                                         (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
-            
+
+            //blood pressure data response
             final byte data_DR[] = new byte[] {         (byte) 0xE7, (byte) 0x00,
                                                         (byte) 0x00, (byte) 0x12,
                                                         (byte) 0x00, (byte) 0x10,
@@ -447,7 +463,8 @@ public class ECGActivity extends Activity {
                                                         (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
                                                         (byte) 0x0D, (byte) 0x1D,
                                                         (byte) 0x00, (byte) 0x00 };
-
+            
+            //blood pressure medical device system attributes request
             final byte get_MDS[] = new byte[] {         (byte) 0xE7, (byte) 0x00,
                                                         (byte) 0x00, (byte) 0x0E,
                                                         (byte) 0x00, (byte) 0x0C,
@@ -457,7 +474,8 @@ public class ECGActivity extends Activity {
                                                         (byte) 0x00, (byte) 0x00,
                                                         (byte) 0x00, (byte) 0x00,
                                                         (byte) 0x00, (byte) 0x00 };
-            
+            //blood pressure remote operation response event report configuration
+            //manager responds that he can utilize the agents configuration
             final byte get_Conf[] = new byte[] {        (byte) 0xE7, (byte) 0x00,
 									                    (byte) 0x00, (byte) 0x16,
 									                    (byte) 0x00, (byte) 0x14,
@@ -470,7 +488,7 @@ public class ECGActivity extends Activity {
 									                    (byte) 0x00, (byte) 0x04,
 									                    (byte) 0x40, (byte) 0x00,
 									                    (byte) 0x00, (byte) 0x00 };
-
+            //blood pressure actual RR
             final byte data_RR[] = new byte[] {         (byte) 0xE5, (byte) 0x00,
                                                         (byte) 0x00, (byte) 0x02,
                                                         (byte) 0x00, (byte) 0x00 };
@@ -513,6 +531,8 @@ public class ECGActivity extends Activity {
     }//WriteThread
     
     
+    
+    //send data ==> compile HL7 message
     public void sendData() {
     	Calendar cal = Calendar.getInstance();
     	String time = ""+cal.get(Calendar.YEAR)+""+(cal.get(Calendar.MONTH)+1)+""+cal.get(Calendar.DAY_OF_MONTH)+""+cal.get(Calendar.HOUR_OF_DAY)+

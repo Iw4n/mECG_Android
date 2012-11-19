@@ -16,7 +16,7 @@ public final class R {
         public static final int ic_launcher=0x7f020002;
     }
     public static final class id {
-        public static final int RelativeLayout1=0x7f07000a;
+        public static final int RelativeLayout1=0x7f070008;
         public static final int bp_info=0x7f070005;
         public static final int bp_reg=0x7f070006;
         public static final int bp_start=0x7f070000;
@@ -25,32 +25,28 @@ public final class R {
         public static final int bp_val_map=0x7f070003;
         public static final int bp_val_pul=0x7f070004;
         public static final int bp_val_syst=0x7f070001;
-        public static final int button1=0x7f07000e;
-        public static final int button2=0x7f070018;
-        public static final int digitalClock1=0x7f07000f;
-        public static final int menu_settings=0x7f070019;
-        public static final int radio0=0x7f070014;
-        public static final int radio1=0x7f070015;
-        public static final int radio2=0x7f070016;
-        public static final int radioButton1=0x7f070013;
-        public static final int radioButton2=0x7f070011;
-        public static final int radioButton3=0x7f070012;
-        public static final int radioGroup1=0x7f070010;
-        public static final int test_wan_btn_save=0x7f070009;
-        public static final int test_wan_lbl_middle=0x7f070008;
-        public static final int textView1=0x7f07000b;
-        public static final int textView2=0x7f07000c;
-        public static final int textView3=0x7f07000d;
-        public static final int view1=0x7f070017;
+        public static final int button1=0x7f07000c;
+        public static final int button2=0x7f070016;
+        public static final int digitalClock1=0x7f07000d;
+        public static final int menu_settings=0x7f070017;
+        public static final int radio0=0x7f070012;
+        public static final int radio1=0x7f070013;
+        public static final int radio2=0x7f070014;
+        public static final int radioButton1=0x7f070011;
+        public static final int radioButton2=0x7f07000f;
+        public static final int radioButton3=0x7f070010;
+        public static final int radioGroup1=0x7f07000e;
+        public static final int textView1=0x7f070009;
+        public static final int textView2=0x7f07000a;
+        public static final int textView3=0x7f07000b;
+        public static final int view1=0x7f070015;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;
-        public static final int activity_test_wan=0x7f030001;
-        public static final int actvitiy_ecg=0x7f030002;
+        public static final int actvitiy_ecg=0x7f030001;
     }
     public static final class menu {
         public static final int activity_main=0x7f060000;
-        public static final int activity_test_wan=0x7f060001;
     }
     public static final class string {
         public static final int app_name=0x7f040000;

@@ -29,7 +29,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:text="Status" />
-
+
     <Button
         android:id="@+id/button1"
         android:layout_width="wrap_content"
@@ -52,38 +52,38 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/textView1" >
-
+
         <RadioButton
             android:id="@+id/radioButton2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="I" />
-
+
         <RadioButton
             android:id="@+id/radioButton3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="II" />
-
+
         <RadioButton
             android:id="@+id/radioButton1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="III" />
-
+
         <RadioButton
             android:id="@+id/radio0"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
             android:text="aVL" />
-
+
         <RadioButton
             android:id="@+id/radio1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="aVR" />
-
+
         <RadioButton
             android:id="@+id/radio2"
             android:layout_width="wrap_content"
@@ -91,7 +91,7 @@
             android:text="aVF" />
 
     </RadioGroup>
-
+
     <View
         android:id="@+id/view1"
         android:layout_width="wrap_content"
