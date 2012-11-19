@@ -44,14 +44,17 @@ import android.widget.Toast;
 public class ECGActivity extends Activity {
 
 	private final static String TAG = "BTActivity";
+	//blood pressure UI elements
 	private Button start;
 	private Button reg;
-	private TextView val_syst;
+	/*private TextView val_syst;
 	private TextView val_diast;
 	private TextView val_map;
 	private TextView val_pul;
 	private TextView val_time;
 	private TextView info;
+	*/
+	
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothDevice[] mAllBondedDevices;
     private BluetoothDevice mDevice;
@@ -63,13 +66,15 @@ public class ECGActivity extends Activity {
     private Handler h = new Handler();
 
     //Variables for Blood Pressure
-    private int sys;
+    /**private int sys;
     private int dia;
     private int map;
     private int pulse;
     private String dat;
     private byte[] invoke = new byte[2];
+    */
     
+    //for HL7 message
     private String msg = "";
     private String obs_dat = "";
     
@@ -78,45 +83,52 @@ public class ECGActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //set view on blood pressure
         setContentView(R.layout.activity_main);
-        //initialize the UI
-        start = (Button)findViewById(R.id.bp_start);
-        reg = (Button)findViewById(R.id.bp_reg);
-        val_syst = (TextView)findViewById(R.id.bp_val_syst);
-        val_diast = (TextView)findViewById(R.id.bp_val_diast);
-        val_map = (TextView)findViewById(R.id.bp_val_map);
-        val_pul = (TextView)findViewById(R.id.bp_val_pul);
-        val_time = (TextView)findViewById(R.id.bp_time);
-        info = (TextView)findViewById(R.id.bp_info);
-
-        val_syst.setText("Systole: ---");
-        val_diast.setText("Diastole: ---");
-        val_map.setText("MAP: ---");
-        val_pul.setText("Puls: ---");
-        val_time.setText("Datum: ---");
-        info.setText("---");
-        
+        //initialize the blood pressure UI
+        /**
+         * start = (Button)findViewById(R.id.bp_start);
+         * reg = (Button)findViewById(R.id.bp_reg);
+         * val_syst = (TextView)findViewById(R.id.bp_val_syst);
+         * val_diast = (TextView)findViewById(R.id.bp_val_diast);
+         * val_map = (TextView)findViewById(R.id.bp_val_map);
+         * val_pul = (TextView)findViewById(R.id.bp_val_pul);
+         * val_time = (TextView)findViewById(R.id.bp_time);
+         * info = (TextView)findViewById(R.id.bp_info);
+         * val_syst.setText("Systole: ---");
+         * val_diast.setText("Diastole: ---");
+         * val_map.setText("MAP: ---");
+         * val_pul.setText("Puls: ---");
+         * val_time.setText("Datum: ---");
+         * info.setText("---");
+        */
+        //setContentView(R.layout.activity_ecg);
         
         //BluetoothAdapter is the entry point for the bluetooth interaction 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         
         //get the profile ==> here HDP / HEALTH
         mBluetoothAdapter.getProfileProxy(this, mBluetoothServiceListener,BluetoothProfile.HEALTH);
-        info.setText("gotProfileProxy");
+        //TODO: display status message elsehwere
+        //info.setText("gotProfileProxy");
         
         //register
         //sink is the smart device that receives the medical data
         //0x1007 blood pressure meter
-        //change 0x1007 to the ECG ID
+        //TODO: change 0x1007 to the ECG ID ==> what is the ECG ID? 
+        //use a self defined??
         //if true callback will be called
         
         mBluetoothHealth.registerSinkAppConfiguration(TAG, 0x1007, mHealthCallback);
         
         //connect -> select device
+       
         /**
          * Dialog to display a list of bonded Bluetooth devices for user to select from.  This is
          * needed only for channel connection initiated from the application.
          */
+        //TODO: change to corresponding button in ECG UI
+        //start button in BloodPressure UI
         start.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mAllBondedDevices =
@@ -142,11 +154,14 @@ public class ECGActivity extends Activity {
             }
         });
         
+        //TODO: change unregister button to ECG UI button
         reg.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
             	mBluetoothHealth.disconnectChannel(mDevice, mHealthAppConfig, mChannelId);
             	//mBluetoothHealth.unregisterAppConfiguration(mHealthAppConfig);
-            	info.setText("---");
+            	//TODO: display status elsewhere
+            	
+            	//info.setText("---");
             }
         });
 
@@ -213,6 +228,7 @@ public class ECGActivity extends Activity {
     	mBluetoothHealth.connectChannelToSource(mDevice, mHealthAppConfig);
     }
     
+    
     private final BluetoothHealthCallback mHealthCallback = new BluetoothHealthCallback() {
         // Callback to handle application registration and unregistration events.  The service
         // passes the status back to the UI client.
@@ -220,12 +236,15 @@ public class ECGActivity extends Activity {
                 int status) {
 
             Log.i(TAG, "***chgReg");
+            
             if (status == BluetoothHealth.APP_CONFIG_REGISTRATION_FAILURE) {
                 mHealthAppConfig = null;
-                info.setText("reg fail");
+                //TODO: show register and unregister status ==> maybe use toast instead of text field
+                //info.setText("reg fail");
             } else if (status == BluetoothHealth.APP_CONFIG_REGISTRATION_SUCCESS) {
                 mHealthAppConfig = config;
-                info.setText("reg suc");
+                //TODO: show register and unregister status ==> maybe use toast instead of text field
+                //info.setText("reg suc");
             }
         }
 
@@ -282,122 +301,125 @@ public class ECGActivity extends Activity {
             mFd = fd;
         }
 
+        //TODO: change read thread to read the ECG data
         @Override
         public void run() {
+        	
             FileInputStream fis = new FileInputStream(mFd.getFileDescriptor());
             byte data[] = new byte[300];
             try {
-
+            
                 Log.d(TAG, "***reading");
                 //info.setText("reading");
                 while(fis.read(data) > -1) {
-                    // At this point, the application can pass the raw data to a parser that
-                    // has implemented the IEEE 11073-xxxxx specifications.  Instead, this sample
-                    // simply indicates that some data has been received.
-                	if (data[0] != (byte) 0x00)
-                    {
-                        String test = byte2hex(data);
-                        Log.i(TAG, test);
-                        if(data[0] == (byte) 0xE2){	//associating
-                            Log.i(TAG, "E2_1");
-                            
-                            count = 1;
-                            (new WriteThread(mFd)).start();
-                            try {
-                                sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            Log.i(TAG, "E2_2");
-                            count = 2;
-                            (new WriteThread(mFd)).start();
-                        }
-                        else if (data[0] == (byte)0xE7){	//associated -> operating|configuring
-                            Log.i(TAG, "E7");
-
-                            if (data[26] == (byte) 0x10 && data[27] == (byte) 0x07)  //mds response ?
-                            {
-                            	Log.i(TAG, "mds response"); 
-                            }
-                            else if (data[18] == (byte) 0x0d && data[19] == (byte) 0x1d)  //operating
-                            {
-                            	Log.i(TAG, "operating"); 
-                                count = 3; 
-                                invoke[0] = data[6];
-                                invoke[1] = data[7];
-                                (new WriteThread(mFd)).start(); 
-                                
-                                //parse data!!
-                                int obs = data[27];
-                                int pos = 31;
-                                for (int i=0; i<obs; i++)
-                                {
-                                	int handle = data[pos];
-                                	switch(handle)
-                                	{
-                                	case 1: //handle1 (sys/dia/map)
-                                        sys = byteToUnsignedInt(data[pos+8]);
-                                        dia = byteToUnsignedInt(data[pos+10]);
-                                        map = byteToUnsignedInt(data[pos+12]);
-                                        dat = String.format("%02X", data[pos+13])+
-                                        		String.format("%02X", data[pos+14])+
-                                        		"-"+String.format("%02X", data[pos+15])+
-                                        		"-"+String.format("%02X", data[pos+16])+
-                                        		" "+String.format("%02X", data[pos+17])+
-                                        		":"+String.format("%02X", data[pos+18]);
-                                        obs_dat = String.format("%02X", data[pos+13])+
-                                        		String.format("%02X", data[pos+14])+
-                                        		String.format("%02X", data[pos+15])+
-                                        		String.format("%02X", data[pos+16])+
-                                        		String.format("%02X", data[pos+17])+
-                                        		String.format("%02X", data[pos+18]);
-                                        
-                                        pos += 22;
-                                        break;
-                                	case 2: //handle2 (pulse)
-                                		pulse = byteToUnsignedInt(data[pos+4]);
-                                		pos += 14;
-                                	}
-
-                                    Log.i(TAG, sys+"/"+dia+", "+map+" - "+pulse);
-                                    Log.i(TAG, dat);
-                                }
-                                
-                                
-                                h.post(new Runnable() {
-                                	public void run() {
-								        val_syst.setText("Systole: "+sys);
-								        val_diast.setText("Diastole: "+dia);
-								        val_map.setText("MAP: "+map);
-								        val_pul.setText("Puls: "+pulse);
-								        val_time.setText("Datum: "+dat);
-								        
-								        sendData();
-									}
-                                });
-                            }
-                            else if (data[18] == (byte) 0x0d && data[19] == (byte) 0x1c)	//configuring
-                            {
-                            	Log.i(TAG, "configuring"); 
-                            	count = 5;
-                                (new WriteThread(mFd)).start();
-                            }
-                        }
-                        else if (data[0] == (byte) 0xE4 || data[0] == (byte) 0xE6)
-                        {
-                            count = 4;
-                            (new WriteThread(mFd)).start();
-                        }
-                        
-                        //zero out the data
-                        /*for (int i = 0; i < data.length; i++){
-                            data[i] = (byte) 0x00;
-                        }*/
-                        data = new byte[300];
-                    }
+//                    // At this point, the application can pass the raw data to a parser that
+//                    // has implemented the IEEE 11073-xxxxx specifications.  Instead, this sample
+//                    // simply indicates that some data has been received.
+//                	if (data[0] != (byte) 0x00)
+//                    {
+//                        String test = byte2hex(data);
+//                        Log.i(TAG, test);
+//                        if(data[0] == (byte) 0xE2){	//associating
+//                            Log.i(TAG, "E2_1");
+//                            
+//                            count = 1;
+//                            (new WriteThread(mFd)).start();
+//                            try {
+//                                sleep(100);
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+//                            Log.i(TAG, "E2_2");
+//                            count = 2;
+//                            (new WriteThread(mFd)).start();
+//                        }
+//                        else if (data[0] == (byte)0xE7){	//associated -> operating|configuring
+//                            Log.i(TAG, "E7");
+//
+//                            if (data[26] == (byte) 0x10 && data[27] == (byte) 0x07)  //mds response ?
+//                            {
+//                            	Log.i(TAG, "mds response"); 
+//                            }
+//                            else if (data[18] == (byte) 0x0d && data[19] == (byte) 0x1d)  //operating
+//                            {
+//                            	Log.i(TAG, "operating"); 
+//                                count = 3; 
+//                                invoke[0] = data[6];
+//                                invoke[1] = data[7];
+//                                (new WriteThread(mFd)).start(); 
+//                                
+//                                //parse data!!
+//                                int obs = data[27];
+//                                int pos = 31;
+//                                for (int i=0; i<obs; i++)
+//                                {
+//                                	int handle = data[pos];
+//                                	switch(handle)
+//                                	{
+//                                	case 1: //handle1 (sys/dia/map)
+//                                        sys = byteToUnsignedInt(data[pos+8]);
+//                                        dia = byteToUnsignedInt(data[pos+10]);
+//                                        map = byteToUnsignedInt(data[pos+12]);
+//                                        dat = String.format("%02X", data[pos+13])+
+//                                        		String.format("%02X", data[pos+14])+
+//                                        		"-"+String.format("%02X", data[pos+15])+
+//                                        		"-"+String.format("%02X", data[pos+16])+
+//                                        		" "+String.format("%02X", data[pos+17])+
+//                                        		":"+String.format("%02X", data[pos+18]);
+//                                        obs_dat = String.format("%02X", data[pos+13])+
+//                                        		String.format("%02X", data[pos+14])+
+//                                        		String.format("%02X", data[pos+15])+
+//                                        		String.format("%02X", data[pos+16])+
+//                                        		String.format("%02X", data[pos+17])+
+//                                        		String.format("%02X", data[pos+18]);
+//                                        
+//                                        pos += 22;
+//                                        break;
+//                                	case 2: //handle2 (pulse)
+//                                		pulse = byteToUnsignedInt(data[pos+4]);
+//                                		pos += 14;
+//                                	}
+//
+//                                    Log.i(TAG, sys+"/"+dia+", "+map+" - "+pulse);
+//                                    Log.i(TAG, dat);
+//                                }
+//                                
+//                                
+//                                h.post(new Runnable() {
+//                                	public void run() {
+//								        val_syst.setText("Systole: "+sys);
+//								        val_diast.setText("Diastole: "+dia);
+//								        val_map.setText("MAP: "+map);
+//								        val_pul.setText("Puls: "+pulse);
+//								        val_time.setText("Datum: "+dat);
+//								        
+//								        sendData();
+//									}
+//                                });
+//                            }
+//                            else if (data[18] == (byte) 0x0d && data[19] == (byte) 0x1c)	//configuring
+//                            {
+//                            	Log.i(TAG, "configuring"); 
+//                            	count = 5;
+//                                (new WriteThread(mFd)).start();
+//                            }
+//                        }
+//                        else if (data[0] == (byte) 0xE4 || data[0] == (byte) 0xE6)
+//                        {
+//                            count = 4;
+//                            (new WriteThread(mFd)).start();
+//                        }
+//                        
+//                        //zero out the data
+//                        /*for (int i = 0; i < data.length; i++){
+//                            data[i] = (byte) 0x00;
+//                        }*/
+//                        data = new byte[300];
+//                    }
                 }
             } catch(IOException ioe) {
                 Log.i(TAG, "exception read, "+ioe.getMessage());}
+            
             if (mFd != null) {
                 try {
                     mFd.close();
@@ -422,6 +444,9 @@ public class ECGActivity extends Activity {
         return 0x00 << 24 | b & 0xff;
       }
     
+    
+    
+    //write thread class
     private class WriteThread extends Thread {
         private ParcelFileDescriptor mFd;
 
@@ -433,7 +458,8 @@ public class ECGActivity extends Activity {
         @Override
         public void run() {
             FileOutputStream fos = new FileOutputStream(mFd.getFileDescriptor());
-            //blood pressure association response
+            //TODO: implement messages fpr ECG
+            /**blood pressure association response
             final byte data_AR[] = new byte[] {         (byte) 0xE3, (byte) 0x00,
                                                         (byte) 0x00, (byte) 0x2C, 
                                                         (byte) 0x00, (byte) 0x00,
@@ -456,6 +482,7 @@ public class ECGActivity extends Activity {
             final byte data_DR[] = new byte[] {         (byte) 0xE7, (byte) 0x00,
                                                         (byte) 0x00, (byte) 0x12,
                                                         (byte) 0x00, (byte) 0x10,
+                                                        
                                                         invoke[0], invoke[1],
                                                         (byte) 0x02, (byte) 0x01,
                                                         (byte) 0x00, (byte) 0x0A,
@@ -527,14 +554,16 @@ public class ECGActivity extends Activity {
                 }
             } catch(IOException ioe) {
                 Log.i(TAG, "exception write");}
+               */
         }
     }//WriteThread
     
     
     
-    //send data ==> compile HL7 message
+    //Blood Pressure: send data ==> compile HL7 message
+    //TODO: implement ECG send data
     public void sendData() {
-    	Calendar cal = Calendar.getInstance();
+    	/**Calendar cal = Calendar.getInstance();
     	String time = ""+cal.get(Calendar.YEAR)+""+(cal.get(Calendar.MONTH)+1)+""+cal.get(Calendar.DAY_OF_MONTH)+""+cal.get(Calendar.HOUR_OF_DAY)+
     			""+cal.get(Calendar.MINUTE)+""+cal.get(Calendar.SECOND)+"+0200";
     			
@@ -542,13 +571,13 @@ public class ECGActivity extends Activity {
     	PID p = new PID("1","171122869^^^","Starek^Christian^^BSc^","Starek^Dagmar^^^^","19890727000000","M");
     	OBR rep = new OBR("1","pon123","fon123","528391^MDC_DEV_SPEC_PROFILE_BP^MDC",obs_dat);
     	ArrayList<OBX> res = new ArrayList<OBX>();
-//   	0.0.0.1
+		//   	0.0.0.1
     	OBX r1 = new OBX("1","","528391^MDC_DEV_SPEC_PROFILE_BP^MDC","1","","","X","","FHTW");
     	OBX r2 = new OBX("2","","150020^MDC_PRESS_BLD_NONINV^MDC","1.0.1","","","X",obs_dat,"");
     	OBX r3 = new OBX("3","NM","150021^MDC_PRESS_BLD_NONINV_SYS^MDC","1.0.1.1",sys+"","266016^MDC_DIM_MMHG^MDC","R","","");
     	OBX r4 = new OBX("4","NM","150022^MDC_PRESS_BLD_NONINV_DIA^MDC","1.0.1.2",dia+"","266016^MDC_DIM_MMHG^MDC","R","","");
     	OBX r5 = new OBX("5","NM","150023^MDC_PRESS_BLD_NONINV_MEAN^MDC","1.0.1.3",map+"","266016^MDC_DIM_MMHG^MDC","R","","");
-//    	149546^MDC_PULS_RATE_NON_INV^MDC	264864^MDC_DIM_BEAT_PER_MIN 1.0.0.1
+		//    	149546^MDC_PULS_RATE_NON_INV^MDC	264864^MDC_DIM_BEAT_PER_MIN 1.0.0.1
     	res.add(r1);
     	res.add(r2);
     	res.add(r3);
@@ -556,10 +585,13 @@ public class ECGActivity extends Activity {
     	res.add(r5);
     	HL7Message hl = new HL7Message(m, p, rep, res);
     	SOAPhard sh = new SOAPhard(hl.getHL7Message());
+    	
+    	//TODO: message for soap transfer!
     	msg = sh.getSoap();
     	
     	Log.d(TAG,msg);
-    	info.setText("soap created");
+    	//TODO: change output to toast?
+    	info.setText("soap created");*/
     	
     	saveSoapTxt();
     	sendSoapHttp();
@@ -603,7 +635,8 @@ public class ECGActivity extends Activity {
 	    	osw.close();
 	    	fos.close();
 	    	
-	    	info.setText("soap saved");	    	
+	    	//TODO: display status message elsewhere
+	    	//info.setText("soap saved");	    	
 	    	
     	}catch(IOException e) {
     		Toast t = Toast.makeText(this, "Schreibfehler IO", 3);
