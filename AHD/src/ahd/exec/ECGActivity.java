@@ -462,8 +462,11 @@ public class ECGActivity extends Activity {
             
             
             
-            //ECG association response
-            final byte data_AssocRes[] = new byte []{	(byte) 0xE3, (byte) 0x00,/*APDU Choice Type (AareApdu)*/
+            //ECG association response config unknown
+            //manage response that it can associate but does not have the basic ECG extended config
+            final byte data_AssocRespConfigUnknown[] = new byte []{	
+            		
+            											(byte) 0xE3, (byte) 0x00,/*APDU Choice Type (AareApdu)*/
             											(byte) 0x00, (byte) 0x2C,/*Choice.length = 44*/
             											(byte) 0x00, (byte) 0x03,/*result accepted-unknown-config*/
             											(byte) 0x50, (byte) 0x79,/*data-proto-id = 20601*/
@@ -482,6 +485,53 @@ public class ECGActivity extends Activity {
             											(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 /*optionList.count = 0 | optionList.length = 0*/
             };
             
+            
+            //ECG association response extended config known
+            
+            final byte data_AssocRespExtendedConfigKnown[] = new byte []{ 
+            
+														(byte) 0xE3, (byte) 0x00,/*APDU Choice Type (AareApdu)*/
+														(byte) 0x00, (byte) 0x2C,/*Choice.length = 44*/
+														(byte) 0x00, (byte) 0x00,/*result accepted*/
+														(byte) 0x50, (byte) 0x79,/*data-proto-id = 20601*/
+														(byte) 0x00, (byte) 0x26,/*data-proto-info length = 38*/
+														(byte) 0x40, (byte) 0x00, (byte) 0x00, (byte) 0x00, /*protocolVersion*/
+														(byte) 0x80, (byte) 0x00, /*encoding rules = MDER*/
+														(byte) 0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00, /*nomenclatureVersion*/
+														(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, /*functionalUnits - normal Association*/
+														(byte) 0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00, /*systemType = sys-type-manager*/
+														(byte) 0x00, (byte) 0x08, /*system-id length = 8 and value (manufacturer- and device specific TODO CARE!?*/
+														(byte) 0x38, (byte) 0x37, (byte) 0x36, (byte) 0x35, /* is this manufacturer and device specific? TODO what to choose here?*/
+														(byte) 0x34, (byte) 0x33, (byte) 0x32, (byte) 0x31, 
+														(byte) 0x00, (byte) 0x00, /*manager's response to config-id is always 0*/
+														(byte) 0x00, (byte) 0x00, /*data-req-mode-flags*/
+														(byte) 0x00, (byte) 0x00, /*data-req-init-agent-count = 0| data-req-init-manager-count = 0*/
+														(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 /*optionList.count = 0 | optionList.length = 0*/
+            };
+            
+            //ECG association response standard config known
+            //has the basic ECG standard config manager does not start a test association
+            final byte data_AssocRespStandConfigKnown[] = new byte[]{
+            		
+														(byte) 0xE3, (byte) 0x00,/*APDU Choice Type (AareApdu)*/
+														(byte) 0x00, (byte) 0x2C,/*Choice.length = 44*/
+														(byte) 0x00, (byte) 0x03,/*result accepted-unknown-config*/
+														(byte) 0x50, (byte) 0x79,/*data-proto-id = 20601*/
+														(byte) 0x00, (byte) 0x26,/*data-proto-info length = 38*/
+														(byte) 0x40, (byte) 0x00, (byte) 0x00, (byte) 0x00, /*protocolVersion*/
+														(byte) 0x80, (byte) 0x00, /*encoding rules = MDER*/
+														(byte) 0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00, /*nomenclatureVersion*/
+														(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, /*functionalUnits - normal Association*/
+														(byte) 0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00, /*systemType = sys-type-manager*/
+														(byte) 0x00, (byte) 0x08, /*system-id length = 8 and value (manufacturer- and device specific TODO CARE!?*/
+														(byte) 0x38, (byte) 0x37, (byte) 0x36, (byte) 0x35, /* is this manufacturer and device specific? TODO what to choose here?*/
+														(byte) 0x34, (byte) 0x33, (byte) 0x32, (byte) 0x31, 
+														(byte) 0x00, (byte) 0x00, /*manager's response to config-id is always 0*/
+														(byte) 0x00, (byte) 0x00, /*data-req-mode-flags*/
+														(byte) 0x00, (byte) 0x00, /*data-req-init-agent-count = 0| data-req-init-manager-count = 0*/
+														(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 /*optionList.count = 0 | optionList.length = 0*/
+            		
+            };
             
             /**blood pressure association response
             final byte data_AR[] = new byte[] {         (byte) 0xE3, (byte) 0x00,
