@@ -114,12 +114,11 @@ public class ECGActivity extends Activity {
         
         //register
         //sink is the smart device that receives the medical data
-        //0x1007 blood pressure meter
-        //TODO: change 0x1007 to the ECG ID ==> what is the ECG ID? 
-        //use a self defined??
+        //ECG MPED ID as in ieee-11073-10406 page 62 define MDC_DEV_SPEC_PROFILE_ECG 4102
+        //0x1006 ==> basic ECG
         //if true callback will be called
         
-        mBluetoothHealth.registerSinkAppConfiguration(TAG, 0x1007, mHealthCallback);
+        mBluetoothHealth.registerSinkAppConfiguration(TAG, 0x1006, mHealthCallback);
         
         //connect -> select device
        
