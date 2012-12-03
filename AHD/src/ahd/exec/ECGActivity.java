@@ -65,6 +65,16 @@ public class ECGActivity extends Activity {
     private int count;
     private Handler h = new Handler();
 
+
+    //Variables for HR
+    private byte[] invoke_id = new byte[2];
+    private int BPM;
+    private String BPMRelativeTimeStamp;
+    private int Ticks1;
+    private String Ticks1RelativeTimeStamp;
+    private int Ticks2;
+    private String Ticks2RelativeTimeStamp;
+    
     //Variables for Blood Pressure
     /**private int sys;
     private int dia;
@@ -200,7 +210,7 @@ public class ECGActivity extends Activity {
             int position = getArguments().getInt("position", -1);
             if (position == -1) position = 0;
             return new AlertDialog.Builder(getActivity())
-                    .setTitle("gerät wählen")
+                    .setTitle("Gerät wählen")
                     .setPositiveButton("ok",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
@@ -311,6 +321,86 @@ public class ECGActivity extends Activity {
                 Log.d(TAG, "***reading");
                 //info.setText("reading");
                 while(fis.read(data) > -1) {
+                	//check the agents response messages
+                	if(data[0] != (byte)0x00)
+                	{
+                		String test = byte2hex(data);
+                		if(data[0] == (byte)0xE2)
+                		{ 	//first byte in the agents response is 0xE2 ==> associating
+                			//count for LOG
+                			Log.i(TAG, "E2_1");
+                			count = 1;
+                			(new WriteThread(mFd)).start();
+                			try {
+                				sleep(100);
+                			}catch (InterruptedException e){
+                				e.printStackTrace();
+                			}
+                			Log.i(TAG, "E2_2");
+                			count = 2;
+                			(new WriteThread(mFd)).start();
+                		}
+                	}
+                	else if(data[0] == (byte)0xE7)//config / operating
+                	{
+                		Log.i(TAG, "E7");
+                		//check if we have a MDS response! starts also with 0xE7
+                		//11073_10406_2012 E.4.1.3 page 75
+                		if(data[26] == (byte)0x10 && data[27] == (byte)0x8D) //mds response for type MDC_DEV_SUB_SPEC_PROFILE_HR
+                		{
+                			Log.i(TAG, "MDS response received");
+                		}
+                		//check data reporting/operating 11073_10406_2012 E5 page 76
+                		else if(data[18] == (byte)0x0D && data[19] == (byte)0x1D)//event-type = MDC_NOTI_SCAN_REPORT_FIXED
+                		{
+                			//get the ECG data
+                			Log.i(TAG, "data reporting");
+                			//parser for the basic data reporting message ==> maybe our agent implements a different method in that case
+                			//TODO: adept the parser! ==> we need to have a "Confirmed" measurement data transmission!
+                			
+                			invoke_id[0]= data[6];
+                			invoke_id[1] = data[7];
+                			(new WriteThread(mFd)).start();
+                			
+                			 int NumberOfObservations = data[27]; //ScanReportInfoFixed.obs-scan-fixed.count = 3
+                			 int Position = 31; //data[31] = first handle 
+                			 
+                			 for (int i=0; i<NumberOfObservations; i++)
+                			 {
+                				int CurrentHandle = data[Position];
+                				switch(CurrentHandle)
+                				{
+	                				case 1: //handle1 
+	                					
+	                					//get BPM value
+	                					BPM = byteToUnsignedInt(data[Position+4]);
+	                					//TODO: timestamp POS+5/6/7/8
+	                					//BPMRelativeTimeStamp = byteToUnsignedInt(data[Position+5]);
+	                					//set Position to next handle
+	                					Position += 10;
+	                					break;
+	                				case 2: //handle2
+	                					Ticks1 = byteToUnsignedInt(data[Position+4]);
+	                					//TODO: timestamp
+	                					//set Position to next handle
+	                					Position +=10;
+	                					break;
+	                				case 3: //handle3
+	                					Ticks2 = byteToUnsignedInt(data[Position+4]);
+	                					break;
+                				}
+                			 }
+                		}
+                		else if(data[18] == (byte) 0x0d && data[19] == (byte) 0x1c)	//configuring
+                		{
+                			Log.i(TAG,"Configuration");
+                			(new WriteThread(mFd)).start();
+                		}
+                	}
+                	else if(data[0] == (byte) 0xE4 || data[0] == (byte) 0xE6)
+                	{
+                		(new WriteThread(mFd)).start();
+                	}
 //                    // At this point, the application can pass the raw data to a parser that
 //                    // has implemented the IEEE 11073-xxxxx specifications.  Instead, this sample
 //                    // simply indicates that some data has been received.
@@ -332,7 +422,8 @@ public class ECGActivity extends Activity {
 //                            count = 2;
 //                            (new WriteThread(mFd)).start();
 //                        }
-//                        else if (data[0] == (byte)0xE7){	//associated -> operating|configuring
+//                        else if (data[0] == (byte)0xE7)
+//                		  {	//associated -> operating|configuring
 //                            Log.i(TAG, "E7");
 //
 //                            if (data[26] == (byte) 0x10 && data[27] == (byte) 0x07)  //mds response ?
@@ -392,7 +483,7 @@ public class ECGActivity extends Activity {
 //								        val_pul.setText("Puls: "+pulse);
 //								        val_time.setText("Datum: "+dat);
 //								        
-//								        sendData();
+//								        sendData(); //send via SOAP
 //									}
 //                                });
 //                            }
@@ -457,11 +548,13 @@ public class ECGActivity extends Activity {
         @Override
         public void run() {
             FileOutputStream fos = new FileOutputStream(mFd.getFileDescriptor());
-            //TODO: implement messages for ECG
+            
             //TODO: hardcoded? can we keep only the case that the config is known or do we need to implement for later the case that the device sends us the config?
             
+         
+            //TODO: next manager messages
             
-            
+            //associate state
             //ECG association response config unknown
             //manage response that it can associate but does not have the basic ECG extended config
             final byte data_AssocRespConfigUnknown[] = new byte []{	
@@ -533,68 +626,60 @@ public class ECGActivity extends Activity {
             		
             };
             
-            /**blood pressure association response
-            final byte data_AR[] = new byte[] {         (byte) 0xE3, (byte) 0x00,
-                                                        (byte) 0x00, (byte) 0x2C, 
-                                                        (byte) 0x00, (byte) 0x00,
-                                                        (byte) 0x50, (byte) 0x79,
-                                                        (byte) 0x00, (byte) 0x26,
-                                                        (byte) 0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                                                        (byte) 0x80, (byte) 0x00,
-                                                        (byte) 0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                                                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                                                        (byte) 0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                                                        (byte) 0x00, (byte) 0x08,
-                                                        (byte) 0x00, (byte) 0x09, (byte) 0x1F, (byte) 0xFF, 
-                                                        (byte) 0xFE, (byte) 0x80, (byte) 0x06, (byte) 0x1C,
-                                                        (byte) 0x00, (byte) 0x00,
-                                                        (byte) 0x00, (byte) 0x00,
-                                                        (byte) 0x00, (byte) 0x00, 
-                                                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
-
-            //blood pressure data response
-            final byte data_DR[] = new byte[] {         (byte) 0xE7, (byte) 0x00,
-                                                        (byte) 0x00, (byte) 0x12,
-                                                        (byte) 0x00, (byte) 0x10,
-                                                        
-                                                        invoke[0], invoke[1],
-                                                        (byte) 0x02, (byte) 0x01,
-                                                        (byte) 0x00, (byte) 0x0A,
-                                                        (byte) 0x00, (byte) 0x00,
-                                                        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-                                                        (byte) 0x0D, (byte) 0x1D,
-                                                        (byte) 0x00, (byte) 0x00 };
+            //configure state
+            //associate result accepted unknown
+            //remote operation response event report configuration
+            final byte data_ConfirmedEventReportResponse[] = new byte[]{
+            											
+            											(byte)0xE7, (byte) 0x00, /*APPDU Choice (PrstApdu)*/
+            											(byte)0x00, (byte) 0x16, /*Choice.lenght= 22*/
+            											(byte)0x00, (byte) 0x14, /*Octet String-length = 20*/
+            											invoke_id[0], invoke_id[1],/*invokde-id = mirrored from invocation*/
+            											(byte)0x02, (byte)0x01, /*Choice Remote Operation Response | Confirmed Event Report)*/
+            											(byte)0x00, (byte)0x0E, /*Choice length = 14*/
+            											(byte)0x00, (byte)0x00, /*obj-handle=0 (MDS object)*/
+            											(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, /*curent time = 0*/
+            											(byte)0x0D, (byte)0x1C, /*event-type=MDC_NOTI_CONFIG*/
+            											(byte)0x00, (byte)0x04, /*event-reply-info.length = 4*/
+            											(byte)0x40, (byte)0x00, /*configreportrsp.config-report-id = 16384*/
+            											(byte)0x00, (byte)0x00 /*configreportrsp.config-result = accepted-config*/
+            };
             
-            //blood pressure medical device system attributes request
-            final byte get_MDS[] = new byte[] {         (byte) 0xE7, (byte) 0x00,
-                                                        (byte) 0x00, (byte) 0x0E,
-                                                        (byte) 0x00, (byte) 0x0C,
-                                                        (byte) 0x00, (byte) 0x24,
-                                                        (byte) 0x01, (byte) 0x03,
-                                                        (byte) 0x00, (byte) 0x06,
-                                                        (byte) 0x00, (byte) 0x00,
-                                                        (byte) 0x00, (byte) 0x00,
-                                                        (byte) 0x00, (byte) 0x00 };
-            //blood pressure remote operation response event report configuration
-            //manager responds that he can utilize the agents configuration
-            final byte get_Conf[] = new byte[] {        (byte) 0xE7, (byte) 0x00,
-									                    (byte) 0x00, (byte) 0x16,
-									                    (byte) 0x00, (byte) 0x14,
-									                    (byte) 0x00, (byte) 0x53,
-									                    (byte) 0x02, (byte) 0x01,
-									                    (byte) 0x00, (byte) 0x0E,
-									                    (byte) 0x00, (byte) 0x00,
-									                    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-									                    (byte) 0x0D, (byte) 0x1C,
-									                    (byte) 0x00, (byte) 0x04,
-									                    (byte) 0x40, (byte) 0x00,
-									                    (byte) 0x00, (byte) 0x00 };
+            //now in associated state
+            //get MDS attributes 
+            //response ==>11073_2012 E.4.1.3 page 75 
+            final byte data_getMDS[] = new byte[] {
+            	
+            						(byte)0xE7, (byte)0x00, /*APDU Choice Type (PrstApdu)*/
+            						(byte)0x00, (byte)0x03, /*Choice.length = 14*/
+            						(byte)0x00, (byte)0x0C, /*OCTET String-length = 12*/
+            						invoke_id[0], invoke_id[1],/*invoke_id differentiates this message fromany other outstanding, choie is implementation specific*/
+            						(byte)0x01, (byte)0x03, /*Choice Remote Operation Invoke|Get*/
+            						(byte)0x00, (byte)0x06, /*choice length = 6*/
+            						(byte)0x00, (byte)0x00, /*handle = 0 MDS Object*/
+            						(byte)0x00, (byte)0x00, /*attribute-id-list.count = 0 (all attributes)*/
+            						(byte)0x00, (byte)0x00 /*attribute-id-list.length = 0*/
+            };
+            
+            //data reporting
+            //10073_2012 E.5.1
+            
+            //disassociation
+            //association release request
+            
+            final byte data_AssociationReleaseRequest[] = new byte[] {
+            								(byte)0xE5, (byte)0x00, /*APDU Choice Type (RlreApdu)*/
+            								(byte)0x00, (byte)0x02, /*Choice.length = 2*/
+            								(byte)0x00, (byte)0x00, /*reasin = normal*/
+            };
+            
+            /**
             //blood pressure actual RR
             final byte data_RR[] = new byte[] {         (byte) 0xE5, (byte) 0x00,
                                                         (byte) 0x00, (byte) 0x02,
                                                         (byte) 0x00, (byte) 0x00 };
-
-            try {
+			//TODO: write thread adaption
+            try {//count from read thread
                 Log.i(TAG, String.valueOf(count));
                 if (count == 1)
                 {
