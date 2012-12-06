@@ -5,7 +5,7 @@
  * should not be modified by hand.
  */
 
-package com.example.cardiograph;
+package ahd.wan;
 
 public final class R {
     public static final class attr {
@@ -26,8 +26,8 @@ public final class R {
         public static final int bp_val_pul=0x7f070013;
         public static final int bp_val_syst=0x7f070010;
         public static final int button1=0x7f070004;
-        public static final int button2=0x7f07000e;
         public static final int digitalClock1=0x7f070005;
+        public static final int ecg_save=0x7f07000e;
         public static final int menu_settings=0x7f070017;
         public static final int radio0=0x7f07000a;
         public static final int radio1=0x7f07000b;

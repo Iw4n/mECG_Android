@@ -103,7 +103,7 @@
         android:background="@drawable/ecg_wave" />
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/ecg_save"
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

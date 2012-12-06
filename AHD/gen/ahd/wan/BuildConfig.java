@@ -1,5 +1,5 @@
 /** Automatically generated file. DO NOT MODIFY */
-package com.example.cardiograph;
+package ahd.wan;
 
 public final class BuildConfig {
     public final static boolean DEBUG = true;

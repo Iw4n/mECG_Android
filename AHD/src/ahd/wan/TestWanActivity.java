@@ -11,15 +11,11 @@ import java.util.logging.LoggingPermission;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
-
-import com.example.cardiograph.R;
-import com.example.cardiograph.R.layout;
-import com.example.cardiograph.R.menu;
-
 import android.os.Bundle;
 import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -32,14 +28,19 @@ public class TestWanActivity extends Activity {
 	private final String tag = "TestWanActivity";
 	private Buffer fifo = BufferUtils.synchronizedBuffer(new CircularFifoBuffer(30));
 	
+	private final int MENU_30rec = Menu.FIRST;
+	private final int MENU_10rec = Menu.FIRST+1;
+	private final int MENU_5rec = Menu.FIRST+2;
+	
+	
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_test_wan);
+        setContentView(R.layout.activity_ecg);
         
         
         
-        btn_save = (Button)findViewById(R.id.test_wan_btn_save);
+        btn_save = (Button)findViewById(R.id.ecg_save);
         
         btn_save.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -56,23 +57,26 @@ public class TestWanActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-    	getMenuInflater().inflate(R.menu.activity_test_wan, menu);
-    	menu.add(0, Menu.FIRST, 0, "Quit");
-    	menu.add(0, MENU_QUIT, 0, "Quit")
+    	menu.add(0, MENU_30rec, 0, "30s");
+    	menu.add(0, MENU_10rec, 0, "10s");
+    	menu.add(0, MENU_5rec, 0, "5s");
         return true;
     }
     
-    public boolean onOptionsItemSelected(MenuItem item) {    
-    	switch (item.getItemId()) {    
-    		case MENU_NEW_GAME:        
-    			newGame();        
-    			return true;    
-    		case MENU_QUIT:        
-    			quit();        
-    			return true;    
-    	}    
-    	return false;
-    }
+	public boolean onOptionsItemSelected(MenuItem item) {    
+		switch (item.getItemId()) {    
+			case MENU_30rec:        
+				recTime = 30;        
+				return true;    
+			case MENU_10rec:        
+				recTime = 10;        
+				return true;      
+			case MENU_5rec:        
+				recTime = 5;        
+				return true;   
+		}    
+		return false;
+	}
     
     public boolean open() {
     	try{
