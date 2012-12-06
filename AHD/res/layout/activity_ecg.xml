@@ -23,20 +23,21 @@
         android:text=" 70 bpm" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/ecg_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
+        android:layout_toRightOf="@+id/ecg_save"
         android:text="Status" />
 
     <Button
-        android:id="@+id/button1"
+        android:id="@+id/ecg_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:text="send to" />
+        android:text="start" />
 
     <DigitalClock
         android:id="@+id/digitalClock1"
@@ -91,14 +92,14 @@
             android:text="aVF" />
 
     </RadioGroup>
-
+
     <View
         android:id="@+id/view1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/textView3"
+        android:layout_above="@+id/ecg_status"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/button1"
+        android:layout_below="@+id/ecg_start"
         android:layout_toRightOf="@+id/textView2"
         android:background="@drawable/ecg_wave" />
 
@@ -107,8 +108,8 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/button1"
+        android:layout_above="@+id/view1"
+        android:layout_toLeftOf="@+id/ecg_start"
         android:text="save" />
 
 </RelativeLayout>

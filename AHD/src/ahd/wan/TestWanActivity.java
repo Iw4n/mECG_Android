@@ -11,6 +11,10 @@ import java.util.logging.LoggingPermission;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
+
+import com.jjoe64.graphview.GraphView.GraphViewData;
+import com.jjoe64.graphview.GraphViewSeries;
+
 import android.os.Bundle;
 import android.app.Activity;
 import android.util.Log;
@@ -18,20 +22,29 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class TestWanActivity extends Activity {
 
 	private int recTime = 30;
+	private int runState = 0;
 	private Button btn_save = null;
-	private int[] data = new int[recTime*1000];
+	private Button btn_start = null;
+	private TextView tv_status = null;
+	
+	private Data[] data = new Data[recTime];
 	private final String tag = "TestWanActivity";
-	private Buffer fifo = BufferUtils.synchronizedBuffer(new CircularFifoBuffer(30));
 	
 	private final int MENU_30rec = Menu.FIRST;
 	private final int MENU_10rec = Menu.FIRST+1;
 	private final int MENU_5rec = Menu.FIRST+2;
 	
+	private DefaultDataThread ddt = new DefaultDataThread();
+	private Thread t = new Thread(ddt);
+	
+	private GraphViewData[] gvd = new GraphViewData[10000];
+	private GraphViewSeries ecg = new GraphViewSeries(gvd);
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -39,20 +52,33 @@ public class TestWanActivity extends Activity {
         setContentView(R.layout.activity_ecg);
         
         
-        
+        tv_status = (TextView)findViewById(R.id.ecg_status);
         btn_save = (Button)findViewById(R.id.ecg_save);
+        btn_start = (Button)findViewById(R.id.ecg_start);
         
-        btn_save.setOnClickListener(new View.OnClickListener() {
+        btn_start.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-            	if(open())//later replaced with get Data from actual stream
-            		save();
+            	if(runState==0) {
+	            	t.start();
+	            	
+	            	runState=1;
+	            	tv_status.setText("running");
+            	}
+            	else
+            	{
+            		runState=0;
+	            	tv_status.setText("idle");
+	            	t.interrupt();
+            	}
             }
         });
         
-    }
-    
-    public void createData() {
-    	fifo.add(new Data());
+        btn_save.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+            	saveSD();
+            }
+        });
+        
     }
 
     @Override
@@ -66,13 +92,16 @@ public class TestWanActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {    
 		switch (item.getItemId()) {    
 			case MENU_30rec:        
-				recTime = 30;        
+				recTime = 30;
+				data = new Data[recTime];
 				return true;    
 			case MENU_10rec:        
-				recTime = 10;        
+				recTime = 10;
+				data = new Data[recTime];
 				return true;      
 			case MENU_5rec:        
-				recTime = 5;        
+				recTime = 5;
+				data = new Data[recTime];
 				return true;   
 		}    
 		return false;
@@ -99,7 +128,7 @@ public class TestWanActivity extends Activity {
 		    	String line = "";
 		    	int i=0;
 		    	while((line=osw.readLine()) != null || i<1000) {
-		    		data[i]=Integer.parseInt(line);
+		    		//data[i]=Integer.parseInt(line);
 		    		i++;
 		    	}
 		    	
@@ -132,5 +161,45 @@ public class TestWanActivity extends Activity {
 		else
 			return false;
 		
+    }
+    
+    public boolean saveSD() {
+    	try{
+	    	
+			StringBuilder sb = new StringBuilder("");
+	    	File filename = new File("/sdcard/ecg.txt");
+	    	if(!filename.exists())
+	    	{
+	    		filename.createNewFile();
+	    		Toast t = Toast.makeText(this, "Datei nicht gefunden", 5);
+	    		t.show();
+	    		return false;
+	    	}
+	    	else
+	    	{
+		    	String ls = System.getProperty("line.separator");
+		    	
+		    	FileWriter fos = new FileWriter(filename);
+		    	BufferedWriter osw = new BufferedWriter(fos);
+		    	
+		    	String line = "";
+
+            	for(int i=0; i<recTime;i++) {
+            		data[i] = (Data) ddt.fifo.get();
+            		osw.append(data[i].getData());
+            	}
+		    	
+		    	osw.close();
+		    	fos.close();
+		    	
+		    	tv_status.setText("saved");
+		    	return true;
+	    	}
+	    
+    	}catch(IOException e)
+    	{
+    		Log.e(tag, "TestWanActivity-save: "+e.getMessage());
+    		return false;
+    	}
     }
 }

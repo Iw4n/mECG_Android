@@ -16,11 +16,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import com.example.cardiograph.R;
-
-
 import ahd.basics.hl7.*;
 import ahd.basics.xml.*;
+import ahd.wan.R;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;

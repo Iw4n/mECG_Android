@@ -18,5 +18,13 @@ public class Data {
 		for(int i=0;i<1000;i++)
 			data[i] = (int) (Math.random()*1023);
 	}
+	
+	public String getData() {
+		String d = "\n##data:";
+		for(int i=0;i<data.length;i++) {
+			d+=data[i]+";";
+		}
+		return d;
+	}
 
 }
