@@ -22,6 +22,7 @@
         android:layout_toRightOf="@+id/textView1"
         android:text=" 70 bpm" />
 
+   
     <TextView
         android:id="@+id/ecg_status"
         android:layout_width="wrap_content"
@@ -30,7 +31,11 @@
         android:layout_alignParentRight="true"
         android:layout_toRightOf="@+id/ecg_save"
         android:text="Status" />
-
+
+
+
+
+
     <Button
         android:id="@+id/ecg_start"
         android:layout_width="wrap_content"
@@ -93,23 +98,25 @@
 
     </RadioGroup>
 
-    <View
-        android:id="@+id/view1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/ecg_status"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/ecg_start"
-        android:layout_toRightOf="@+id/textView2"
-        android:background="@drawable/ecg_wave" />
-
     <Button
         android:id="@+id/ecg_save"
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/view1"
+        android:layout_alignParentTop="true"
         android:layout_toLeftOf="@+id/ecg_start"
         android:text="save" />
+
+    <LinearLayout
+        android:id="@+id/ecg_graphview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/ecg_status"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/ecg_save"
+        android:layout_toRightOf="@+id/radioGroup1"
+        android:orientation="vertical" >
+
+    </LinearLayout>
 
 </RelativeLayout>
