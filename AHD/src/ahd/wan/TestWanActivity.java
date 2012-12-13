@@ -6,27 +6,38 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.logging.LoggingPermission;
 
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 
+import sun.awt.RepaintArea;
+
+import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GraphView.GraphViewData;
 import com.jjoe64.graphview.GraphViewSeries;
+import com.jjoe64.graphview.LineGraphView;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.app.Activity;
+import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class TestWanActivity extends Activity {
 
+	public int jump = 200;
 	private int recTime = 30;
 	private int runState = 0;
 	private Button btn_save = null;
@@ -40,35 +51,76 @@ public class TestWanActivity extends Activity {
 	private final int MENU_10rec = Menu.FIRST+1;
 	private final int MENU_5rec = Menu.FIRST+2;
 	
-	private DefaultDataThread ddt = new DefaultDataThread();
-	private Thread t = new Thread(ddt);
 	
-	private GraphViewData[] gvd = new GraphViewData[10000];
-	private GraphViewSeries ecg = new GraphViewSeries(gvd);
+	private GraphViewSeries ecg = null;
+	private GraphView gv = null;
+	private LinearLayout ll_graphview = null;
+
+	private int count = 1;//testzwecke gvd
+	private final Handler mHandler = new Handler();
+	
+	private Runnable mTimer1;
+	
+    final Runnable updateRunnable = new Runnable() {
+        public void run() {
+            //call the activity method that updates the UI
+            gv.invalidate();
+        }
+    };
+	
+	
+	private int[] def_data = new int[30000];
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ecg);
         
-        
         tv_status = (TextView)findViewById(R.id.ecg_status);
         btn_save = (Button)findViewById(R.id.ecg_save);
-        btn_start = (Button)findViewById(R.id.ecg_start);
+        btn_start = (Button)findViewById(R.id.ecg_start); 
+        
+        ecg = new GraphViewSeries(new GraphViewData[] {new GraphViewData(0, 0)});
+        gv = new LineGraphView(this, "mECG");
+        gv.setViewPort(0, 3000);  
+        gv.setScrollable(true);  
+        // optional - activate scaling / zooming  
+       // gv.setScalable(true); 
+        gv.addSeries(ecg);
+
+        ll_graphview = (LinearLayout)findViewById(R.id.ecg_graphview);
+        ll_graphview.addView(gv);
+        
+        
+        readEcgFile(); //get ECG data from
+        
         
         btn_start.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
             	if(runState==0) {
-	            	t.start();
-	            	
-	            	runState=1;
-	            	tv_status.setText("running");
+	            		runState=1;
+		            	tv_status.setText("running");
+		            	btn_start.setText("pause");
+		       
+		        		mTimer1 = new Runnable() {
+		        			public void run() {
+	        					for(int i=0;i<1000;i++)
+	        						ecg.appendData(getDefEcgValue(),true);
+		        				mHandler.post(this);
+		        			}
+						};
+        
+//		        		mHandler.postDelayed(mTimer1, jump);
+		        		mHandler.post(mTimer1);
+		        		gv.invalidate();
             	}
             	else
             	{
             		runState=0;
 	            	tv_status.setText("idle");
-	            	t.interrupt();
+	            	btn_start.setText("start");
+	            	
+	            	mHandler.removeCallbacks(mTimer1);
             	}
             }
         });
@@ -80,6 +132,34 @@ public class TestWanActivity extends Activity {
         });
         
     }
+    
+    public GraphViewData[] getRandValues() {
+    	GraphViewData e[] = new GraphViewData[jump];
+    	for(int i=0;i<jump;i++) {
+    		e[i] = new GraphViewData(count,(Math.random()*1023));
+    		System.out.println(e[i].valueX+" - "+e[i].valueY);
+        	count++;
+    	}
+    	return e;
+    }
+    
+    public GraphViewData[] getDefEcgValues() {
+    	GraphViewData e[] = new GraphViewData[jump];
+    	for(int i=0;i<jump;i++) {
+    		e[i] = new GraphViewData(count,def_data[count%def_data.length]);
+    		//System.out.println(e[i].valueX+" - "+e[i].valueY);
+        	count++;
+    	}
+    	System.out.println(count);
+    	return e;
+    }
+    
+    public GraphViewData getDefEcgValue() {
+    	GraphViewData e = new GraphViewData(count,def_data[count%def_data.length]);
+        count++;
+    	return e;
+    }
+    
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -106,8 +186,31 @@ public class TestWanActivity extends Activity {
 		}    
 		return false;
 	}
-    
-    public boolean open() {
+
+	/*
+	@Override
+	protected void onPause() {
+		mHandler.removeCallbacks(mTimer1);
+		super.onPause();
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		mTimer1 = new Runnable() {
+			public void run() {
+				ecg.resetData(getValues());
+				mHandler.postDelayed(this, jump);
+			}
+		};
+		mHandler.postDelayed(mTimer1, jump);
+
+	}
+	*/
+	
+	
+	
+    public void readEcgFile() {
     	try{
     	    	
 			StringBuilder sb = new StringBuilder("");
@@ -116,7 +219,6 @@ public class TestWanActivity extends Activity {
 	    	{
 	    		Toast t = Toast.makeText(this, "Datei nicht gefunden", 5);
 	    		t.show();
-	    		return false;
 	    	}
 	    	else
 	    	{
@@ -127,21 +229,18 @@ public class TestWanActivity extends Activity {
 		    	
 		    	String line = "";
 		    	int i=0;
-		    	while((line=osw.readLine()) != null || i<1000) {
-		    		//data[i]=Integer.parseInt(line);
+		    	while((line=osw.readLine()) != null || i<30000) {
+		    		def_data[i]=Integer.parseInt(line);
 		    		i++;
 		    	}
 		    	
 		    	osw.close();
 		    	fos.close();
-		    	
-		    	return true;
 	    	}
 	    
     	}catch(IOException e)
     	{
     		Log.e(tag, "open: "+e.getMessage());
-    		return false;
     	}
     }
     
@@ -167,7 +266,8 @@ public class TestWanActivity extends Activity {
     	try{
 	    	
 			StringBuilder sb = new StringBuilder("");
-	    	File filename = new File("/sdcard/ecg.txt");
+			Calendar cal = Calendar.getInstance();
+	    	File filename = new File("/sdcard/ecg_"+cal.getTimeInMillis()+".txt");
 	    	if(!filename.exists())
 	    	{
 	    		filename.createNewFile();
@@ -184,10 +284,11 @@ public class TestWanActivity extends Activity {
 		    	
 		    	String line = "";
 
-            	for(int i=0; i<recTime;i++) {
-            		data[i] = (Data) ddt.fifo.get();
-            		osw.append(data[i].getData());
-            	}
+		    	// write buffer data (recTime)
+//            	for(int i=0; i<recTime;i++) {
+//            		data[i] = (Data) ddt.fifo.get();
+//            		osw.append(data[i].getData());
+//            	}
 		    	
 		    	osw.close();
 		    	fos.close();
