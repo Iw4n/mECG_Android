@@ -45,19 +45,12 @@ public class TestWanActivity extends Activity {
 	private LinearLayout ll_graphview = null;
 
 	private int count = 1;//testzwecke gvd
+	private int countY = 0;
 	private final Handler mHandler = new Handler();
 	
 	private Runnable mTimer1;
-	
-    final Runnable updateRunnable = new Runnable() {
-        public void run() {
-            //call the activity method that updates the UI
-            gv.invalidate();
-        }
-    };
-	
-	
-	private int[] def_data = new int[30000];
+		
+	private int[] def_data = new int[3000];
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -67,26 +60,14 @@ public class TestWanActivity extends Activity {
         tv_status = (TextView)findViewById(R.id.ecg_status);
         btn_save = (Button)findViewById(R.id.ecg_save);
         btn_start = (Button)findViewById(R.id.ecg_start); 
-        
-        ecg = new GraphViewSeries(new GraphViewData[] {new GraphViewData(0, 0)});
-        gv = new LineGraphView(this, "mECG");
-        gv.setViewPort(0, 3000);  
-        gv.setScrollable(true);  
-        // optional - activate scaling / zooming  
-       // gv.setScalable(true); 
-        gv.addSeries(ecg);
-
-        ll_graphview = (LinearLayout)findViewById(R.id.ecg_graphview);
-        ll_graphview.addView(gv);
-        
-        
+                
         readEcgFile(); //get ECG data from
         
         btn_start = (Button)findViewById(R.id.ecg_start); 
         
         ecg = new GraphViewSeries(new GraphViewData[] {new GraphViewData(0, 0)});
         gv = new LineGraphView(this, "mECG");
-        gv.setViewPort(0, 3000);  
+        gv.setViewPort(0, 1000);
         gv.setScrollable(true);  
         // optional - activate scaling / zooming  
        // gv.setScalable(true); 
@@ -94,9 +75,6 @@ public class TestWanActivity extends Activity {
 
         ll_graphview = (LinearLayout)findViewById(R.id.ecg_graphview);
         ll_graphview.addView(gv);
-        
-        
-        readEcgFile(); //get ECG data from 
         
         btn_start.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -104,18 +82,20 @@ public class TestWanActivity extends Activity {
 	            		runState=1;
 		            	tv_status.setText("running");
 		            	btn_start.setText("pause");
-		       
+		            	final long t1 = System.currentTimeMillis();
 		        		mTimer1 = new Runnable() {
 		        			public void run() {
-	        					for(int i=0;i<1000;i++)
-	        						ecg.appendData(getDefEcgValue(),true);
-		        				mHandler.post(this);
+	        					ecg.appendData(getDefEcgValue(),true);
+		        				mHandler.postDelayed(this,5);
+		        				tv_status.setText(""+countY);
+		        				countY++;
+		        				ll_graphview.postInvalidate();
+		        				gv.invalidate();
 		        			}
 						};
         
-//		        		mHandler.postDelayed(mTimer1, jump);
-		        		mHandler.post(mTimer1);
-		        		gv.invalidate();
+		        		mHandler.post(mTimer1);//start timer1
+
             	}
             	else
             	{
@@ -158,8 +138,9 @@ public class TestWanActivity extends Activity {
     }
     
     public GraphViewData getDefEcgValue() {
-    	GraphViewData e = new GraphViewData(count,def_data[count%def_data.length]);
+    	GraphViewData e = new GraphViewData(countY,def_data[count%def_data.length]);
         count++;
+        countY+=5;
     	return e;
     }
     
@@ -214,10 +195,12 @@ public class TestWanActivity extends Activity {
 	
 	
     public void readEcgFile() {
+
+    	int i=0;
     	try{
     	    	
 			StringBuilder sb = new StringBuilder("");
-	    	File filename = new File("/sdcard/ecg.txt");
+	    	File filename = new File("/sdcard/ecg200hz.txt");
 	    	if(!filename.exists())
 	    	{
 	    		Toast t = Toast.makeText(this, "Datei nicht gefunden", 5);
@@ -231,19 +214,20 @@ public class TestWanActivity extends Activity {
 		    	BufferedReader osw = new BufferedReader(fos);
 		    	
 		    	String line = "";
-		    	int i=0;
-		    	while((line=osw.readLine()) != null || i<30000) {
+		    	while((line=osw.readLine()) != null || i<3000) {
 		    		def_data[i]=Integer.parseInt(line);
 		    		i++;
 		    	}
 		    	
 		    	osw.close();
 		    	fos.close();
+		    	Toast t = Toast.makeText(this, "EKG geladen", 5);
+	    		t.show();
 	    	}
 	    
-    	}catch(IOException e)
+    	}catch(Exception e)
     	{
-    		Log.e(tag, "open: "+e.getMessage());
+    		Log.e(tag, "open: "+e.getMessage()+" _i:"+i);
     	}
     }
     

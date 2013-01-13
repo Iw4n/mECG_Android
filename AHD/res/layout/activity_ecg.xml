@@ -119,4 +119,12 @@
 
     </LinearLayout>
 
+    <DigitalClock
+        android:id="@+id/digitalClock2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/ecg_save"
+        android:layout_alignParentBottom="true"
+        android:text="DigitalClock" />
+
 </RelativeLayout>
